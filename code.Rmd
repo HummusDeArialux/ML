@@ -1,0 +1,8 @@
+---
+title: "Machine Learning PEC1"
+author: "Maria Lucas"
+date: "2023-03-24"
+output: pdf_document
+---
+
+
