@@ -1,8 +1,40 @@
 ---
-title: "Machine Learning PEC1"
+title: "Predicción de la estructura secundaria de proteínas globulares"
 author: "Maria Lucas"
 date: "2023-03-24"
-output: pdf_document
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 3
 ---
+
+# Algoritmo k-NN
+
+placeholder 
+
+| Ventajas | Inconvenientes |
+| --- | ----------- |
+| tafachero | iokse |
+| funsiona | enkmomento |
+
+# Codificación one-hot
+
+```{python}
+
+print('Ni puta idea de como hacer esto hulio')
+
+```
+
+# Clasificador knn
+
+noc
+
+## Carga del fichero
+
+alfjpajdf
+
+## onehot
+
+
 
 
