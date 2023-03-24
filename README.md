@@ -1,3 +1,3 @@
 # ML
 
-PEC 1 de Machine Learning561
+PEC 1 de Machine Learnings
