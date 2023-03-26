@@ -38,10 +38,21 @@ use_python("C:/Users/Arialux/AppData/Local/Programs/Python/Python311")
 
 ```{python}
 
-def OneHot(seq):
-  
+def encode_sequence(sequence):
+    
+    # Define a dictionary that maps amino acids to their corresponding positions in the one-hot encoding
+    aa_to_index = {'A': 0, 'R': 1, 'N': 2, 'D': 3, 'C': 4, 'Q': 5, 'E': 6, 'G': 7, 'H': 8, 'I': 9, 'L': 10, 'K': 11, 'M': 12, 'F': 13, 'P': 14, 'S': 15, 'T': 16, 'W': 17, 'Y': 18, 'V': 19}
 
-print('Ni puta idea de como hacer esto hulio')
+    # Initialize an empty list to store the encoding
+    encoding = []
+
+    # Iterate over each amino acid in the sequence and encode it using the aa_to_index dictionary
+    
+    for aa in sequence:
+        index = aa_to_index[aa]
+        encoding.extend([1 if i == index else 0 for i in range(20)])
+
+    return encoding
 
 ```
 
@@ -79,7 +90,6 @@ from tabulate import tabulate
 tabla = [["a-helix", ahelix], ["b-sheet", bsheet], ["coil", coil]]
 print(tabulate(tabla, headers=["Estructura", "Contador"]))
 
-    
 ```
 
 ```{r}
