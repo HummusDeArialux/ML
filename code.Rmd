@@ -34,9 +34,6 @@ La elección del valor de k en el algoritmo k-nn es un factor crítico que puede
 ```{r}
 library(reticulate)
 use_python("C:/Users/Arialux/AppData/Local/Programs/Python/Python311")
-
-#pip install numpy
-#np = import('numpy')
 ```
 
 ```{python}
@@ -50,27 +47,39 @@ print('Ni puta idea de como hacer esto hulio')
 
 # Clasificador knn
 
-## Carga del fichero
+## (a) Carga del fichero y tabla resumen
 
 ```{python}
 
-#pip install numpy
-import numpy as np
-import csv
-
-
-csv_filename = 'data4.csv'
-
-with open(csv_filename) as f:
-    reader = csv.reader(f)
-    seq = list(reader)
-    array = np.array(seq)
-    print(array)
-
+# Carga de los datos
 #pip install pandas
 import pandas as pd
-data = pd.read_csv('data4.csv').values
-print(data)
+data = pd.read_csv('data4.csv', delimiter=";").values
+
+```
+
+```{python}
+
+# Creación tabla resumen
+coil = 0
+bsheet = 0
+ahelix = 0
+
+for seq in data:
+  if seq[-1] == "_":
+    coil += 1
+  if seq[-1] == "e":
+    bsheet += 1
+  if seq[-1] == "h":
+    ahelix += 1
+
+#pip install tabulate
+from tabulate import tabulate
+
+tabla = [["a-helix", ahelix], ["b-sheet", bsheet], ["coil", coil]]
+print(tabulate(tabla, headers=["Estructura", "Contador"]))
+
+    
 ```
 
 ```{r}
