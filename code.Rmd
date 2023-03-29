@@ -169,8 +169,8 @@ for i in k_list:
 
   results.append([i, accuracy_i, kappa_i, error_i, cm_i])
   
-  tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix"])
-  print(tabla)
+tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix"])
+print(tabla)
 
 ```
 
