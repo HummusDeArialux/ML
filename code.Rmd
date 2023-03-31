@@ -5,7 +5,7 @@ date: "2023-03-24"
 output: 
   pdf_document:
     toc: true
-    toc_depth: 3
+    toc_depth: 4
 ---
 
 \newpage
@@ -99,7 +99,6 @@ sum_table(data)
 
 ```
 
-
 ## (b) Aplicación one-hot
 
 ```{python}
@@ -144,13 +143,16 @@ sum_table(y_train)
 
 seq_encoded_train = np.array(seq_encoded_train)
 
-from sklearn.metrics import confusion_matrix, cohen_kappa_score
+from sklearn.metrics import confusion_matrix, cohen_kappa_score, classification_report
 from sklearn.neighbors import KNeighborsClassifier
 
 k_list = [1, 3, 5, 7, 11]
 results = []
+reports = []
 
 for i in k_list:
+  #results = []
+  
   knn_i = KNeighborsClassifier(n_neighbors = i)
   knn_i.fit(seq_encoded_train, y_train)
   y_pred = knn_i.predict(seq_encoded_test)
@@ -162,15 +164,22 @@ for i in k_list:
   kappa_i = cohen_kappa_score(y_test, y_pred)
   
   # Confusion matrix
-  cm_i = confusion_matrix(y_test, y_pred)
+  cm_i = confusion_matrix(y_test, y_pred, labels=["_", "e", "h"])
+  order_i = knn_i.classes_
   
   # Error
   error_i = 1 - knn_i.score(seq_encoded_test, y_test)
-
-  results.append([i, accuracy_i, kappa_i, error_i, cm_i])
   
-tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix"])
+  # Report
+  report_i = classification_report(y_test, y_pred, labels=["_", "e", "h"])
+  
+  results.append([i, accuracy_i, kappa_i, error_i, cm_i])
+  reports.append([i, report_i])
+  
+tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
+tabla2 = tabulate(reports, numalign = "right", stralign = "right", headers = ["k", "Others"])
 print(tabla)
+print(tabla2)
 
 ```
 
@@ -246,10 +255,19 @@ plt.show()
 
 ## (f) Resultados
 
-```{python}
+### Clasificación para tres estructuras
 
-print("Donete")
+Observando los resultados de la clasificación para las tres clases de estructuras secundarias, podemos ver que el modelo que mejor predice es el que usa k=1. Podemos deducirlo puesto que tiene un error de clasificación menor (0,24) lo que indica que tan solo predice mal un 24% de los casos del data test. Como bien sabemos este error no deja de ser 1-exactitud (accuracy), así que estos dos parámetros nos aportan la idea de qué tan bien nuestro modelo clasifica la estructura de la cadena de aminoácidos. 
 
-```
+El valor kappa está estrechamente relacionado con la exactitud, excepto que éste tiene en cuenta la probabilidad de clasificar correctamente por azar. Cuánto más cercano a 1 es el valor, mejor predice el modelo, mientras que si el valor es cercano a 0, el modelo no predice mejor que una clasificación aleatoria. En este caso el valor más elevado es el de k=1, con 0.59. Si seguimos la guía general proporcionada en el libro, el modelo sigue un ajuste moderado-bueno. Depende de la aplicación del modelo si este ajuste es suficientemente bueno para ser usado o no, según si se pueden permitir errores o no.
 
+La precisión, el recall y el F-score también parecen indicar que el modelo con k=1 se ajusta mejor. En este caso como hay 3 posibles resultados se calculan sobre cada una de las clases. Aunque el k=1 parezca ajustarse mejor, escogemos el modelo según la naturaleza de nuestros datos y el problema a resolver. La precisión representa la proporción de ejemplos positivos que eran realmente positivos (que se han clasificado como esa clase y lo eran). Si queremos que el modelo sólo clasifique coil en los casos que realmente sea coil, buscaremos un valor alto de precisión para coil. Por otro lado, un valor elevado de recall indicará que nuestro modelo detecta gran parte de los casos positivos, siguiendo el ejemplo anterior, de todas las estructuras que eran coil ha clasificado bien muchas de ellas. Finalmente, si queremos hacernos una idea general podemos consultar el F-score, que combina recall y precisión en un solo valor. 
+
+Cabe destacar que ninguno de los parámetros que hemos mencionado por sí solos puede proporcionar una idea clara de si un modelo está overfitted o underfitted a los datos, ya que cada uno de ellos mide diferentes aspectos del rendimiento del modelo. En general, se recomienda evaluar varios parámetros diferentes y realizar una evaluación cruzada para evitar overfitting.
+
+### Clasificación para coil y non-coil
+
+
+
+### Comentario global
   
