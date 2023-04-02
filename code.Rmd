@@ -254,11 +254,12 @@ for i in range(len(k_list)):
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate (1-E)')
+plt.ylabel('True Positive Rate (S)')
 plt.title('ROC Curve for k-NN Classifier')
 plt.legend(loc="lower right")
 plt.show()
+
 ```
 
 ## (f) Resultados
@@ -279,7 +280,14 @@ Cabe destacar que ninguno de los parámetros que hemos mencionado por sí solos 
 
 Primeramente, cabe destacar que al separar los datos de esta manera, la clase non-coil está mejor representada que las clases a-helix y b-sheet por separado, así que a priori, pensaríamos que obtendremos un mejor modelo. 
 
-En este caso no examinamos los valores de precisión y recall, ya que al tener sólo dos posibles resultados equivalen a Sensibilidad y Valor Predictivo Positivo, que examinaremos más cómodamente mediante curvas ROC.
+Igual que en el modelo anterior, parece ser que el k=1 es el más exacto y con menor error. Nuevamente el valor kappa nos indica que estamos ante un modelo de ajuste moderado-bueno. En este caso no examinamos los valores de precisión y recall, ya que al tener sólo dos posibles resultados equivalen a Valor Predictivo Positivo y Sensibilidad, que examinaremos más cómodamente mediante curvas ROC.
+
+Analizando la curva ROC podría parecer que k=1 es el que mejor se ajusta, ya que es el que más se aproxima a 1 de sensibilidad y 0 de 1 - especificidad. El modelo parece clasificar de forma bastante equilibrada los verdaderos positivos sin elevar mucho el número de falsos positivos. Lo mismo sucede con los negativos. Lo podemos ver en la propia curva ROC, pero también en la propia matriz de confusión. El número de falsos positivos y de falsos negativos es bastante similar, sobretodo para k=1. 
+
+Pero si examinamos el AUC, vemos que k = 3 es ligeramente superior. Al ser una diferencia de tan solo 0.01, al tener en cuenta el resto de factores, k=1 es el modelo que mejor se ajusta. Consultando el libro de referencia, podemos determinar que el ajuste es bueno/excelente. 
 
 ### Comentario global
   
+En ambos casos hemos obtenido un relativamente buen modelo para predecir la estructura de la secuencia de aminoácidos. Parecería que el modelo coil/non-coil sería más exacto al sólo tener dos posibles resultados en lugar de tres, pero tras examinar los distintos parámetros vemos que en realidad ambos modelos son buenos. 
+
+Un valor de k muy pequeño como es k=1, puede significar que el modelo está muy ajustado a los datos de entrenamiento (overfitted) y no generalizará bien con datos nuevos. Si quisiéramos ajustar mejor los modelos necesitaríamos usar técnicas como las cross-validation para usar el máximo número de datos posibles para su entrenamiento. También sería conveniente una vez tengamos el modelo que queremos utilizar, después de ajustar la k y las estructuras a predecir, que creemos un set de datos de validación para asegurarnos que efectivamente el modelo es bueno. Al usar el mismo test en todos los modelos para estudiar su ajuste, hemos escogido el test que mejor predice esos datos, que podría no ser el que mejor prediga datos futuros. Pasando un nuevo set de datos de validación ("nunca vistos") nos dará idea de cómo de bien predice datos el modelo final. 
