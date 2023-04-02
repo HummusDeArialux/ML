@@ -173,7 +173,7 @@ for i in k_list:
   # Report
   report_i = classification_report(y_test, y_pred, labels=["_", "e", "h"])
   
-  results.append([i, accuracy_i, kappa_i, error_i, cm_i])
+  results.append([i, accuracy_i, kappa_i, error_i, cm_i, order_i])
   reports.append([i, report_i])
   
 tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
@@ -186,6 +186,7 @@ print(tabla2)
 ## (e) Predicción coil/non-coil y curva ROC
 
 ```{python}
+# Definimos una función que nos ayude a contar las instancias
 
 def count_instances(array):
   unique, counts = np.unique(array, return_counts=True)
@@ -216,7 +217,7 @@ count_instances(y2_test)
 from sklearn.metrics import roc_curve, roc_auc_score
 
 k_list = [1, 3, 5, 7, 11]
-accuracy_list2 = []
+results_list2 = []
 roc_auc_list = []
 fpr_list = []  # create empty list to store fpr for each k
 tpr_list = []  # create empty list to store tpr for each k
@@ -225,17 +226,23 @@ tpr_list = []  # create empty list to store tpr for each k
 for i in k_list:
   knn_i = KNeighborsClassifier(n_neighbors=i)
   knn_i.fit(seq_encoded_train2, y2_train)
-  y_pred_proba = knn_i.predict_proba(seq_encoded_test2)[:, 1]  # predicted probabilities of class 1
-  fpr, tpr, thresholds = roc_curve(y2_test, y_pred_proba, pos_label = "1")  # calculate fpr, tpr, and thresholds
-  roc_auc = roc_auc_score(y2_test, y_pred_proba)  # calculate ROC AUC
+  y_pred2 = knn_i.predict_proba(seq_encoded_test2)[:, 1]  # predicted probabilities of class 1
+  fpr, tpr, thresholds = roc_curve(y2_test, y_pred2, pos_label = "1")  # calculate fpr, tpr, and thresholds
+  roc_auc = roc_auc_score(y2_test, y_pred2)  # calculate ROC AUC
+  
   accuracy_i = knn_i.score(seq_encoded_test2, y2_test)
-  accuracy_list2.append(accuracy_i)
+  kappa_i = cohen_kappa_score(y2_test, y_pred2)
+  cm_i = confusion_matrix(y2_test, y_pred2, labels=["1", "0"])
+  order_i = knn_i.classes_
+  error_i = 1 - knn_i.score(seq_encoded_test, y_test)
+  
+  results_list2.append([accuracy_i, kappa_i, error_i, cm_i, order_i])
   roc_auc_list.append(roc_auc)
   fpr_list.append(fpr)  # add fpr for this value of k to the list
   tpr_list.append(tpr)  # add tpr for this value of k to the list
 
-print('Accuracy:', accuracy_list2)
-print('ROC AUC:', roc_auc_list)
+tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
+print(tabla)
 
 import matplotlib.pyplot as plt
 
@@ -257,6 +264,8 @@ plt.show()
 
 ### Clasificación para tres estructuras
 
+Previamente a la aplicación del algoritmo, es conveniente asegurarse que todos los tipos de estructura están correctamente representados tanto en el set de entrenamiento como en el de test, ya que por azar podrían haberse repartido todos los de una clase en el set de test y nuestro modelo nunca los precedería. Como podemos observar no tenemos ese problema ya se repartieron de forma bastante equitativa. También cabe destacar le clase coil está más representada con respecto al resto. 
+
 Observando los resultados de la clasificación para las tres clases de estructuras secundarias, podemos ver que el modelo que mejor predice es el que usa k=1. Podemos deducirlo puesto que tiene un error de clasificación menor (0,24) lo que indica que tan solo predice mal un 24% de los casos del data test. Como bien sabemos este error no deja de ser 1-exactitud (accuracy), así que estos dos parámetros nos aportan la idea de qué tan bien nuestro modelo clasifica la estructura de la cadena de aminoácidos. 
 
 El valor kappa está estrechamente relacionado con la exactitud, excepto que éste tiene en cuenta la probabilidad de clasificar correctamente por azar. Cuánto más cercano a 1 es el valor, mejor predice el modelo, mientras que si el valor es cercano a 0, el modelo no predice mejor que una clasificación aleatoria. En este caso el valor más elevado es el de k=1, con 0.59. Si seguimos la guía general proporcionada en el libro, el modelo sigue un ajuste moderado-bueno. Depende de la aplicación del modelo si este ajuste es suficientemente bueno para ser usado o no, según si se pueden permitir errores o no.
@@ -267,7 +276,9 @@ Cabe destacar que ninguno de los parámetros que hemos mencionado por sí solos 
 
 ### Clasificación para coil y non-coil
 
+Primeramente, cabe destacar que al separar los datos de esta manera, la clase non-coil está mejor representada que las clases a-helix y b-sheet por separado, así que a priori, pensaríamos que obtendremos un mejor modelo. 
 
+En este caso no examinamos los valores de precisión y recall, ya que al tener sólo dos posibles resultados equivalen a Sensibilidad y Valor Predictivo Positivo, que examinaremos más cómodamente mediante curvas ROC.
 
 ### Comentario global
   
