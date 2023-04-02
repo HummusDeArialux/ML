@@ -232,16 +232,16 @@ for i in k_list:
   
   accuracy_i = knn_i.score(seq_encoded_test2, y2_test)
   kappa_i = cohen_kappa_score(y2_test, y_pred2)
-  cm_i = confusion_matrix(y2_test, y_pred2, labels=["1", "0"])
+  cm_i = confusion_matrix(y2_test, y_pred2)
   order_i = knn_i.classes_
-  error_i = 1 - knn_i.score(seq_encoded_test, y_test)
+  error_i = 1 - knn_i.score(seq_encoded_test2, y2_test)
   
   results_list2.append([accuracy_i, kappa_i, error_i, cm_i, order_i])
   roc_auc_list.append(roc_auc)
   fpr_list.append(fpr)  # add fpr for this value of k to the list
   tpr_list.append(tpr)  # add tpr for this value of k to the list
 
-tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
+tabla = tabulate(results_list2, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
 print(tabla)
 
 import matplotlib.pyplot as plt
