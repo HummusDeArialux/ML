@@ -2,12 +2,42 @@
 title: "Predicción de la estructura secundaria de proteínas globulares"
 author: "Maria Lucas"
 date: "2023-03-24"
+header-includes: 
+  - |
+    \usepackage{listings}
+    \usepackage{xcolor}
+    
+    \definecolor{codegreen}{rgb}{0,0.6,0}
+    \definecolor{codeblue}{rgb}{0,0,0.6}
+    \definecolor{codegray}{rgb}{0.5,0.5,0.5}
+    \definecolor{codepurple}{rgb}{0.58,0,0.82}
+    \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+    
+    \lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=color{codeblue},
+    stringstyle=\color{codepurple},
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+    }
+    
+    \lstset{style = mystyle}
 output: 
   pdf_document:
     toc: true
     toc_depth: 4
+    pandoc_args: --listings
+    keep_tex: true
+lang: Es-es
 ---
-
 \newpage
 
 # 1. Algoritmo k-NN
@@ -31,7 +61,7 @@ La elección del valor de k en el algoritmo k-nn es un factor crítico que puede
 
 # 2. Codificación one-hot
 
-```{r}
+```{r, include=FALSE}
 library(reticulate)
 use_python("C:/Users/Arialux/AppData/Local/Programs/Python/Python311")
 ```
@@ -43,13 +73,15 @@ def encode_sequence(sequence):
     # Define a dictionary that maps amino acids to their corresponding positions in the one-hot encoding
     aa_to_index = {'A': 0, 'R': 1, 'N': 2, 'D': 3, 'C': 4, 'Q': 5, 'E': 6, 'G': 7, 'H': 8, 'I': 9, 'L': 10, 'K': 11, 'M': 12, 'F': 13, 'P': 14, 'S': 15, 'T': 16, 'W': 17, 'Y': 18, 'V': 19}
 
-    # Initialize an empty list to store the encoding
-    encoding = []
+    # Empty list to store the encoding
+    encoding = [] 
 
     # Iterate over each amino acid in the sequence and encode it using the aa_to_index dictionary
     
     for aa in sequence:
         index = aa_to_index[aa]
+        # Creates a list of 20 0 except for the element at the position of the index where it puts a 1
+        # The extend method makes the new encoded aa be added to the encoding list
         encoding.extend([1 if i == index else 0 for i in range(20)])
 
     return encoding
@@ -62,8 +94,7 @@ def encode_sequence(sequence):
 
 ```{python}
 
-# Carga de los datos
-#pip install pandas
+# Loading data
 import pandas as pd
 data = pd.read_csv('data4.csv', delimiter=";").values
 
@@ -71,15 +102,18 @@ data = pd.read_csv('data4.csv', delimiter=";").values
 
 ```{python}
 
-# Creación tabla resumen
+# Summary table
 
 def sum_table(data):
   
+  # Defines 3 counters, one for each structure and initially sets them to 0
   coil = 0
   bsheet = 0
   ahelix = 0
 
+  # Iterates over the sequence and adds 1 to the counter of the structure encountered
   for seq in data:
+    # We use column -1 because it is where the structure info is located
     if seq[-1] == "_":
       coil += 1
     if seq[-1] == "e":
@@ -87,11 +121,12 @@ def sum_table(data):
     if seq[-1] == "h":
       ahelix += 1
 
+  # Formats the table itself
   tabla = [["a-helix", ahelix], ["b-sheet", bsheet], ["coil", coil]]
   
   return print(tabulate(tabla, headers=["Estructura", "Contador"]))
 
-# Aplicación
+# Apply the function
 
 from tabulate import tabulate
 
@@ -105,15 +140,17 @@ sum_table(data)
 
 import numpy as np
 
-# Guardamos la última columna como y, ya que son las estructuras a predecir
+# Save the last column as y because they contain the structures to predict
 
 y = data[:, -1]
 
-# Quitamos la última columna que es la estructura. 1 es columna 0 es row
+# Removed the structures columns of the data
 list_seq = np.delete(data, -1, 1)
 
+# Create the list to store the encoded data
 seq_encoded = []
 
+# We iterate over the data applying the encoding function and storing it in the list
 for seq in list_seq:
   seq_encoded.append(encode_sequence(seq))
 
@@ -126,12 +163,13 @@ for seq in list_seq:
 
 from sklearn.model_selection import train_test_split
 
-# Volvemos a poner la columna de la estructura
+# Transform the encoded list sequence to an array
 seq_encoded = (np.array(seq_encoded))
 
-# Split the data into training and testing sets
+# Split the data into training and testing sets setting the seed to 123
 seq_encoded_train, seq_encoded_test, y_train, y_test = train_test_split(seq_encoded, y ,test_size=0.33,  random_state=123)
 
+# Apply the sum function to examine the data sets
 sum_table(y_test)
 sum_table(y_train)
 
@@ -140,30 +178,33 @@ sum_table(y_train)
 ## (d) Aplicación k-NN para predecir la estructura
 
 ```{python}
-
+# Transform the training encoded list sequence to an array
 seq_encoded_train = np.array(seq_encoded_train)
 
 from sklearn.metrics import confusion_matrix, cohen_kappa_score, classification_report
 from sklearn.neighbors import KNeighborsClassifier
 
+# Create the list of k to study
 k_list = [1, 3, 5, 7, 11]
+# Defining list to store data
 results = []
 reports = []
 
+# We iterate over the k list to generate a model for each k
 for i in k_list:
-  #results = []
+
+  knn_i = KNeighborsClassifier(n_neighbors = i) # Creates the KNeighborsClassifier object with k=i
+  knn_i.fit(seq_encoded_train, y_train) # Fit the model to the training set
+  y_pred = knn_i.predict(seq_encoded_test) # Predicts the labels of the test data
   
-  knn_i = KNeighborsClassifier(n_neighbors = i)
-  knn_i.fit(seq_encoded_train, y_train)
-  y_pred = knn_i.predict(seq_encoded_test)
-  
+  # We calculate the parameters to determine de adjust of the model:
   # Accuracy
   accuracy_i = knn_i.score(seq_encoded_test, y_test)
   
   # Kappa value
   kappa_i = cohen_kappa_score(y_test, y_pred)
   
-  # Confusion matrix
+  # Confusion matrix and order of the labels
   cm_i = confusion_matrix(y_test, y_pred, labels=["_", "e", "h"])
   order_i = knn_i.classes_
   
@@ -173,11 +214,14 @@ for i in k_list:
   # Report
   report_i = classification_report(y_test, y_pred, labels=["_", "e", "h"])
   
+  # Adds the parameters to the corresponding lists
   results.append([i, accuracy_i, kappa_i, error_i, cm_i, order_i])
   reports.append([i, report_i])
   
-tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
+# Creates the results tables (out of the loop)
+tabla = tabulate(results, headers=["k", "Accuracy", "Kappa Value", "Error ", "Confusion matrix", "Class order"])
 tabla2 = tabulate(reports, numalign = "right", stralign = "right", headers = ["k", "Others"])
+# Prints the tables
 print(tabla)
 print(tabla2)
 
@@ -187,8 +231,11 @@ print(tabla2)
 
 ```{python}
 
+# Define a function to summarise the data sets
 def count_instances(array):
+  # Counts unique ocurrences in the array
   unique, counts = np.unique(array, return_counts=True)
+  # Shows them in a dictionary
   dic = dict(zip(unique, counts))
   
   return print(dic)
@@ -196,18 +243,22 @@ def count_instances(array):
 ```
 
 ```{python}
+
 # Preparing y
+y2 = np.copy(y) # Copy y to y2 to preserve the original
 
-y2 = np.copy(y)
-
+# Change the structures (h and e to = 1, _ = 0), so 1 = nc, 0 = coil
 y2[y2 == "h"] = "1"
 y2[y2 == "e"] = "1"
 y2[y2 == "_"] = "0"
 
+# Examine the data set
 count_instances(y2)
 
+# Split the data set into training and test using the seed 123
 seq_encoded_train2, seq_encoded_test2, y2_train, y2_test = train_test_split(seq_encoded, y2 ,test_size=0.33,  random_state=123)
 
+# Examine the data set
 count_instances(y2_train)
 count_instances(y2_test)
 
@@ -215,50 +266,69 @@ count_instances(y2_test)
 
 from sklearn.metrics import roc_curve, roc_auc_score
 
+# Create the list of k to study
 k_list = [1, 3, 5, 7, 11]
+
+# Defining list to store data
 results_list2 = []
 roc_auc_list = []
-fpr_list = []  # create empty list to store fpr for each k
-tpr_list = []  # create empty list to store tpr for each k
+fpr_list = []  # False positive ratio
+tpr_list = []  # True positive Ratio
 
-
+# We iterate over the k list to generate a model for each k
 for i in k_list:
-  knn_i = KNeighborsClassifier(n_neighbors=i)
-  knn_i.fit(seq_encoded_train2, y2_train)
-  y_pred_proba = knn_i.predict_proba(seq_encoded_test2)[:, 1]  # predicted probabilities of class 1
-  y_pred = np.where(y_pred_proba >= 0.5, '1', '0')  # convert predicted probabilities to binary class labels
-  fpr, tpr, thresholds = roc_curve(y2_test, y_pred_proba, pos_label = "1")  # calculate fpr, tpr, and thresholds
-  roc_auc = roc_auc_score(y2_test, y_pred_proba)  # calculate ROC AUC
   
+  knn_i = KNeighborsClassifier(n_neighbors=i) # Creates the KNeighborsClassifier object with k=i
+  knn_i.fit(seq_encoded_train2, y2_train) # Fit the model to the training set
+  y_pred_proba = knn_i.predict_proba(seq_encoded_test2)[:, 1]  # Predicted probabilities of class 1
+  y_pred = np.where(y_pred_proba >= 0.5, '1', '0')  # Convert predicted probabilities to binary class labels
+  
+  # Calculate the parameters to create roc_curve
+  fpr, tpr, thresholds = roc_curve(y2_test, y_pred_proba, pos_label = "1")
+  # Calculate ROC_curve
+  roc_auc = roc_auc_score(y2_test, y_pred_proba)
+  
+  # We calculate the parameters to determine de adjust of the model:
+  # Accuracy
   accuracy_i = knn_i.score(seq_encoded_test2, y2_test)
+  
+  #Kappa Value
   kappa_i = cohen_kappa_score(y2_test, y_pred)
   
+  # Confusion matrix and order of the labels
   cm_i = confusion_matrix(y2_test, y_pred, labels=["0", "1"])
   order_i = knn_i.classes_
+  
+  # Error
   error_i = 1 - accuracy_i
   
+  # Adds the parameters to the results list
   results_list2.append([i, accuracy_i, kappa_i, error_i, cm_i ,order_i])
   
+  # Adds the ROC curve, fpr and tpr to the list
   roc_auc_list.append(roc_auc)
   fpr_list.append(fpr)  # add fpr for this value of k to the list
   tpr_list.append(tpr)  # add tpr for this value of k to the list
 
-tabla = tabulate(results_list2, headers=["k", "Accuracy", "Kappa Value", "Classification Error ", "Confusion matrix", "Class order"])
-print(tabla)
+# Creates the table to show the parameters
+tabla = tabulate(results_list2, headers=["k", "Accuracy", "Kappa Value", "Error ", "Confusion matrix", "Class order"])
+print(tabla) # Prints the table
+
+# Plots the ROC curves
 
 import matplotlib.pyplot as plt
 
-plt.figure(figsize=(8, 6))
-for i in range(len(k_list)):
-    plt.plot(fpr_list[i], tpr_list[i], label='k = %d, AUC = %.2f' % (k_list[i], roc_auc_list[i]))
-plt.plot([0, 1], [0, 1], 'k--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate (1-E)')
-plt.ylabel('True Positive Rate (S)')
-plt.title('ROC Curve for k-NN Classifier')
-plt.legend(loc="lower right")
-plt.show()
+plt.figure(figsize=(8, 6)) # Set figure size
+for i in range(len(k_list)): # Draw as many curves as items in k_list
+    plt.plot(fpr_list[i], tpr_list[i], label='k = %d, AUC = %.2f' % (k_list[i], roc_auc_list[i])) # Plots the curve for each k and sets the AUC values for the legend
+plt.plot([0, 1], [0, 1], 'k--') # Draws axis
+plt.xlim([0.0, 1.0]) # Set X axis
+plt.ylim([0.0, 1.05]) # Set Y axis
+plt.xlabel('False Positive Rate (1-E)') # X label
+plt.ylabel('True Positive Rate (S)') # Y label
+plt.title('ROC Curve for k-NN Classifier') # Graph title
+plt.legend(loc="lower right") # Legend
+plt.show() # Prints the graph
 
 ```
 
