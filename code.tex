@@ -178,7 +178,7 @@ Rápida fase de entrenamiento & Lenta fase de clasificación \\
 No paramétrico & Se debe escoger una k apropiada \\
 Buen rendimiento en datos con pocos atributos & Computacionalmente
 costoso para gran cantidad de datos \\
-Se puede actualizar a tiempo real con nuevos datos & Sensible a datos
+Se puede actualizar en tiempo real con nuevos datos & Sensible a datos
 redundantes y a valores atípicos \\
 & Requiere pre-procesamiento de los datos \\
 \bottomrule()
@@ -245,14 +245,14 @@ def sum_table(data):
   # Calculates the total number of structures
   total = sum(counts.values())
 
-  # Formats the table itself
+  # Creates header labels
   headers = ["Estructura", "Contador", "Porcentaje"]
-  tabla = []
+  tabla = [] # Empty table list to append the results
   # For each structure in the dic
   for structure in counts:
     count = counts[structure] # Saves the number of instances as count
     percentage = count / total * 100 # Calculates the percentage
-    tabla.append([structure, count, percentage])# Adds it to the table
+    tabla.append([structure, count, percentage])# Adds the results to the list
   
   return print(tabulate(tabla, headers=headers, floatfmt=".2f"))
 
@@ -293,7 +293,6 @@ fuera más fácil ver la representación de cada clase.
 import numpy as np
 
 # Save the last column as y because it contains the structures to predict
-
 y = data[:, -1]
 
 # Removed the structures columns from the data
@@ -379,7 +378,7 @@ for i in k_list:
 
   knn_i = KNeighborsClassifier(n_neighbors = i) # Creates the KNeighborsClassifier object with k=i
   
-  '''Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'''
+  #Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console
   
   knn_i.fit(seq_encoded_train, y_train) # Fit the model to the training set
   y_pred = knn_i.predict(seq_encoded_test) # Predicts the labels of the test data
@@ -405,15 +404,10 @@ for i in k_list:
 \end{lstlisting}
 
 \begin{lstlisting}
-## 'Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'
 ## KNeighborsClassifier(n_neighbors=1)
-## 'Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'
 ## KNeighborsClassifier(n_neighbors=3)
-## 'Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'
 ## KNeighborsClassifier()
-## 'Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'
 ## KNeighborsClassifier(n_neighbors=7)
-## 'Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'
 ## KNeighborsClassifier(n_neighbors=11)
 \end{lstlisting}
 
@@ -507,7 +501,7 @@ ROC}\label{e-predicciuxf3n-coilnon-coil-y-curva-roc}}
 # Preparing y
 y2 = np.copy(y) # Copy y to y2 to preserve the original
 
-# Change the structures (h and e to = 1, _ = 0), so 1 = nc, 0 = coil
+# Change the structures (h and e = 1, _ = 0), so 1 = nc, 0 = coil
 y2[y2 == "h"] = "1"
 y2[y2 == "e"] = "1"
 y2[y2 == "_"] = "0"
@@ -578,26 +572,24 @@ for i in k_list:
   # Calculate ROC_curve
   roc_auc = roc_auc_score(y2_test, y_pred_proba)
   
-  # We calculate the parameters to determine de adjust of the model:
-  # Accuracy
-  accuracy_i = knn_i.score(seq_encoded_test2, y2_test)
+  # Calculate the parameters to determine de adjust of the model:
   
-  #Kappa Value
-  kappa_i = cohen_kappa_score(y2_test, y_pred)
+  accuracy_i = knn_i.score(seq_encoded_test2, y2_test) # Accuracy
+  
+  kappa_i = cohen_kappa_score(y2_test, y_pred) # Kappa value
   
   # Confusion matrix and order of the labels
-  cm_i = confusion_matrix(y2_test, y_pred, labels=["0", "1"])
-  order_i = knn_i.classes_
-  tn, fp, fn, tp = confusion_matrix(y2_test, y_pred, labels=["0", "1"]).ravel()
+  cm_i = confusion_matrix(y2_test, y_pred, labels=["0", "1"]) # Confusion matrix
+  order_i = knn_i.classes_ # Order of the labels
+  tn, fp, fn, tp = confusion_matrix(y2_test, y_pred, labels=["0", "1"]).ravel() # Extract data 
   
   # Compute the evaluation metrics
-  VPP = tp / (tp + fp)
-  VPN = tn / (tn + fn)
-  sensitivity = tp / (tp + fn)
-  specificity = tn / (tn + fp)
-  
-  # Error
-  error_i = 1 - accuracy_i
+  VPP = tp / (tp + fp) # VPP
+  VPN = tn / (tn + fn) # VPN
+  sensitivity = tp / (tp + fn) # S
+  specificity = tn / (tn + fp) # E
+
+  error_i = 1 - accuracy_i # Error
   
   # Adds the parameters to the results list
   results_list2.append([i, accuracy_i, kappa_i, error_i, cm_i ,order_i])
@@ -644,7 +636,7 @@ print(tabla) # Prints the table
 \begin{lstlisting}[language=Python]
 print(tabla2)
 
-# Plots the ROC curves
+# Plots the ROC curves with AUC
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -695,8 +687,8 @@ a evitar un posible sesgo en las predicciones del modelo, ya que cada
 clase tiene una presencia más equilibrada en el conjunto de datos.
 
 Para el cálculo de la curva roc, la función roc\_curve de sklearn
-calcula automática los thresholds necesarios para poder obtener valores
-que representen adecuadamente los FPR y TPR sin que sea
+calcula automáticamente los thresholds necesarios para poder obtener
+valores que representen adecuadamente los FPR y TPR sin que sea
 computacionalmente costoso. En cambio, para el cálculo de la matriz de
 confusión, se ha usado un threshold estándard de 0.5 que podría no ser
 el más interesante para el modelo.
@@ -725,9 +717,9 @@ estructuras}\label{clasificaciuxf3n-para-tres-estructuras}}
 
 Previamente a la aplicación del algoritmo, es conveniente asegurarse que
 todos los tipos de estructura están correctamente representados tanto en
-el set de entrenamiento como en el de test. Como hemos comentado, aunque
-la clase coil está sobrerepresentada, los sets de entrenamiento y prueba
-contienen un porcentaje de estructuras similar de cada clase.
+el set de entrenamiento como en el de prueba. Como hemos comentado,
+aunque la clase coil está sobrerepresentada, los sets de entrenamiento y
+prueba contienen un porcentaje de estructuras similar de cada clase.
 
 Observando los resultados de la clasificación para las tres clases de
 estructuras secundarias, podemos ver que el modelo que mejor predice es
@@ -778,37 +770,54 @@ non-coil}\label{clasificaciuxf3n-para-coil-y-non-coil}}
 
 Primeramente, cabe destacar que al separar los datos de esta manera, la
 clase non-coil está mejor representada que las clases a-helix y b-sheet
-por separado, así que a priori, pensaríamos que obtendremos un mejor
-modelo.
+por separado. Es importante saber que tanto el valor predictivo positivo
+(VPP o precisión) como el valor predictivo negativo (VPN), se ven
+afectados por la prevalencia de una de las clases. Si la clase positiva
+está subrepresentada, se podría obtener un VPP elevado clasificando
+todos los casos como negativos. Por ello es importante evaluar múltiples
+parámetros a la hora de evaluar el ajuste de un modelo.
 
 Igual que en el modelo anterior, parece ser que el k=1 es el más exacto
 y con menor error. Nuevamente el valor kappa nos indica que estamos ante
-un modelo de ajuste moderado-bueno. En este caso no examinamos los
-valores de precisión y recall, ya que al tener sólo dos posibles
-resultados equivalen a Valor Predictivo Positivo y Sensibilidad, que
-examinaremos más cómodamente mediante curvas ROC.
+un modelo de ajuste moderado-bueno.
+
+Los valores de sensibilidad (S), especificidad (E), VPP y VPN, también
+nos indican que el modelo con k=1 es el que mejor se ajusta en general.
+En este caso, el modelo tiene una sensibilidad de 0.77 y una
+especificidad de 0.81, lo que significa que es capaz de detectar
+correctamente el 77\% de los casos positivos y de identificar
+correctamente el 81\% de los casos negativos.
+
+Por otro lado, los valores predictivos positivo y negativo indican la
+probabilidad de que un resultado positivo o negativo, respectivamente,
+sea verdadero. En este caso, el VPP es 0.77 y el VPN es 0.82, lo que
+significa que cuando el modelo da una predicción positiva, hay una
+probabilidad del 77\% de que sea verdadera, mientras que cuando da una
+predicción negativa, la probabilidad de que sea verdadera es del 82\%.
+Esto coincide con las reflexiones realizadas en los apartados 3.a y 3.e,
+y es que como la clase negativa (coil) está ligeramente
+sobrerepresentada, es más probable que la clasifique correctamente.
 
 Analizando la curva ROC podría parecer que k=1 es el que mejor se
 ajusta, ya que es el que más se aproxima a 1 de sensibilidad y 0 de 1 -
-especificidad. El modelo parece clasificar de forma bastante equilibrada
-los verdaderos positivos sin elevar mucho el número de falsos positivos.
-Lo mismo sucede con los negativos. Lo podemos ver en la curva ROC, pero
-también en la propia matriz de confusión. El número de falsos positivos
-y de falsos negativos es bastante similar, sobretodo para k=1.
-
-Los falsos positivos y falsos negativos son dos tipos de errores que
-pueden ocurrir en un modelo de clasificación. Un falso positivo ocurre
-cuando el modelo predice incorrectamente que un evento pertenece a una
-clase, cuando en realidad no lo hace. Por otro lado, un falso negativo
-ocurre cuando el modelo predice incorrectamente que un evento no
-pertenece a una clase, cuando en realidad sí lo hace.
+especificidad. Lo podemos ver en la curva ROC, pero también en la propia
+matriz de confusión. El número de falsos positivos y de falsos negativos
+es bastante similar, sobretodo para k=1. Conforme aumentamos el valor de
+k, la curva se aleja cada vez más de estos valores ideales, determinando
+así que se ajustan peor los modelos.
 
 Si examinamos el AUC, vemos que k = 3 es ligeramente superior. Al ser
 una diferencia de tan solo 0.01, al tener en cuenta el resto de
-factores, k=1 es el modelo que mejor se ajusta. Consultando el libro de
-referencia (Lantz, Brett. Machine Learning with R (2). Packt Publishing,
-2015. 452 p.~ISBN 9781784394523), podemos determinar que el ajuste de
-acuerdo al AUC es bueno/excelente.
+factores, k=1 sigue siendo el modelo que mejor se ajusta. Consultando el
+libro de referencia (Lantz, Brett. Machine Learning with R (2). Packt
+Publishing, 2015. 452 p.~ISBN 9781784394523), podemos determinar que el
+ajuste de acuerdo al AUC (0.8) es bueno/excelente. Cabe destacar que el
+AUC da una medida sobre la capacidad del modelo para distinguir entre
+las clases positiva y negativa en diferentes niveles de probabilidad de
+clasificación o thresholds. Este valor no proporciona información sobre
+la precisión del modelo o la calidad de la predicción en sí misma, por
+ello lo combinamos con el resto de parámetros para determinar cuál es
+mejor modelo para el caso de estudio.
 
 \hypertarget{comentario-global}{%
 \subsubsection{Comentario global}\label{comentario-global}}

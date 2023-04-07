@@ -56,7 +56,7 @@ La elección del valor de k en el algoritmo k-nn es un factor crítico que puede
 | Rápida fase de entrenamiento | Lenta fase de clasificación |
 | No paramétrico | Se debe escoger una k apropiada |
 | Buen rendimiento en datos con pocos atributos | Computacionalmente costoso para gran cantidad de datos |
-| Se puede actualizar a tiempo real con nuevos datos | Sensible a datos redundantes y a valores atípicos |
+| Se puede actualizar en tiempo real con nuevos datos | Sensible a datos redundantes y a valores atípicos |
 |  | Requiere pre-procesamiento de los datos |
 
 # 2. Codificación one-hot
@@ -123,14 +123,14 @@ def sum_table(data):
   # Calculates the total number of structures
   total = sum(counts.values())
 
-  # Formats the table itself
+  # Creates header labels
   headers = ["Estructura", "Contador", "Porcentaje"]
-  tabla = []
+  tabla = [] # Empty table list to append the results
   # For each structure in the dic
   for structure in counts:
     count = counts[structure] # Saves the number of instances as count
     percentage = count / total * 100 # Calculates the percentage
-    tabla.append([structure, count, percentage])# Adds it to the table
+    tabla.append([structure, count, percentage])# Adds the results to the list
   
   return print(tabulate(tabla, headers=headers, floatfmt=".2f"))
 
@@ -151,7 +151,6 @@ Nota: He añadido el apartado porcentaje aunque no se pidiera para que fuera má
 import numpy as np
 
 # Save the last column as y because it contains the structures to predict
-
 y = data[:, -1]
 
 # Removed the structures columns from the data
@@ -163,7 +162,6 @@ seq_encoded = []
 # Iterate over the data applying the encoding function and storing it in the list
 for seq in list_seq:
   seq_encoded.append(encode_sequence(seq))
-
 
 ```
 
@@ -208,7 +206,7 @@ for i in k_list:
 
   knn_i = KNeighborsClassifier(n_neighbors = i) # Creates the KNeighborsClassifier object with k=i
   
-  '''Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console'''
+  #Note: By default KNeighborsClassifier takes k=5 and thus n_neighbors=5 is not printed in the console
   
   knn_i.fit(seq_encoded_train, y_train) # Fit the model to the training set
   y_pred = knn_i.predict(seq_encoded_test) # Predicts the labels of the test data
@@ -246,7 +244,7 @@ print(tabla2)
 # Preparing y
 y2 = np.copy(y) # Copy y to y2 to preserve the original
 
-# Change the structures (h and e to = 1, _ = 0), so 1 = nc, 0 = coil
+# Change the structures (h and e = 1, _ = 0), so 1 = nc, 0 = coil
 y2[y2 == "h"] = "1"
 y2[y2 == "e"] = "1"
 y2[y2 == "_"] = "0"
@@ -288,26 +286,24 @@ for i in k_list:
   # Calculate ROC_curve
   roc_auc = roc_auc_score(y2_test, y_pred_proba)
   
-  # We calculate the parameters to determine de adjust of the model:
-  # Accuracy
-  accuracy_i = knn_i.score(seq_encoded_test2, y2_test)
+  # Calculate the parameters to determine de adjust of the model:
   
-  #Kappa Value
-  kappa_i = cohen_kappa_score(y2_test, y_pred)
+  accuracy_i = knn_i.score(seq_encoded_test2, y2_test) # Accuracy
+  
+  kappa_i = cohen_kappa_score(y2_test, y_pred) # Kappa value
   
   # Confusion matrix and order of the labels
-  cm_i = confusion_matrix(y2_test, y_pred, labels=["0", "1"])
-  order_i = knn_i.classes_
-  tn, fp, fn, tp = confusion_matrix(y2_test, y_pred, labels=["0", "1"]).ravel()
+  cm_i = confusion_matrix(y2_test, y_pred, labels=["0", "1"]) # Confusion matrix
+  order_i = knn_i.classes_ # Order of the labels
+  tn, fp, fn, tp = confusion_matrix(y2_test, y_pred, labels=["0", "1"]).ravel() # Extract data 
   
   # Compute the evaluation metrics
-  VPP = tp / (tp + fp)
-  VPN = tn / (tn + fn)
-  sensitivity = tp / (tp + fn)
-  specificity = tn / (tn + fp)
-  
-  # Error
-  error_i = 1 - accuracy_i
+  VPP = tp / (tp + fp) # VPP
+  VPN = tn / (tn + fn) # VPN
+  sensitivity = tp / (tp + fn) # S
+  specificity = tn / (tn + fp) # E
+
+  error_i = 1 - accuracy_i # Error
   
   # Adds the parameters to the results list
   results_list2.append([i, accuracy_i, kappa_i, error_i, cm_i ,order_i])
@@ -325,7 +321,7 @@ tabla2 = tabulate(metrics_list, headers=["k", "Sensibilidad", "Especificidad", "
 print(tabla) # Prints the table
 print(tabla2)
 
-# Plots the ROC curves
+# Plots the ROC curves with AUC
 
 import matplotlib.pyplot as plt
 
@@ -345,7 +341,7 @@ plt.show() # Prints the graph
 
 Es importante destacar que, en este nuevo modelo, los datos se distribuyen de manera más equitativa entre las clases. Esto puede ayudar a evitar un posible sesgo en las predicciones del modelo, ya que cada clase tiene una presencia más equilibrada en el conjunto de datos.
 
-Para el cálculo de la curva roc, la función roc_curve de sklearn calcula automática los thresholds necesarios para poder obtener valores que representen adecuadamente los FPR y TPR sin que sea computacionalmente costoso. En cambio, para el cálculo de la matriz de confusión, se ha usado un threshold estándard de 0.5 que podría no ser el más interesante para el modelo. 
+Para el cálculo de la curva roc, la función roc_curve de sklearn calcula automáticamente los thresholds necesarios para poder obtener valores que representen adecuadamente los FPR y TPR sin que sea computacionalmente costoso. En cambio, para el cálculo de la matriz de confusión, se ha usado un threshold estándard de 0.5 que podría no ser el más interesante para el modelo. 
 
 El uso de diferentes thresholds para el cálculo de la curva ROC y la matriz de confusión se debe a la naturaleza de cada métrica. Para la curva ROC, se requiere calcular los valores de TPR y FPR para diferentes puntos de corte o thresholds en la salida del modelo. Para facilitar este cálculo, la función roc_curve de sklearn utiliza un enfoque automático que encuentra los thresholds necesarios de manera eficiente.
 
@@ -355,7 +351,7 @@ Por otro lado, para la matriz de confusión, se utiliza un threshold estándar d
 
 ### Clasificación para tres estructuras
 
-Previamente a la aplicación del algoritmo, es conveniente asegurarse que todos los tipos de estructura están correctamente representados tanto en el set de entrenamiento como en el de test. Como hemos comentado, aunque la clase coil está sobrerepresentada, los sets de entrenamiento y prueba contienen un porcentaje de estructuras similar de cada clase.
+Previamente a la aplicación del algoritmo, es conveniente asegurarse que todos los tipos de estructura están correctamente representados tanto en el set de entrenamiento como en el de prueba. Como hemos comentado, aunque la clase coil está sobrerepresentada, los sets de entrenamiento y prueba contienen un porcentaje de estructuras similar de cada clase.
 
 Observando los resultados de la clasificación para las tres clases de estructuras secundarias, podemos ver que el modelo que mejor predice es el que usa k=1. Podemos deducirlo puesto que tiene un error de clasificación menor (0,24) lo que indica que tan solo predice mal un 24% de los casos del data test. Como bien sabemos este error no deja de ser 1-exactitud (accuracy), así que estos dos parámetros nos aportan la idea de qué tan bien nuestro modelo clasifica la estructura de la cadena de aminoácidos. 
 
@@ -373,7 +369,7 @@ Igual que en el modelo anterior, parece ser que el k=1 es el más exacto y con m
 
 Los valores de sensibilidad (S), especificidad (E), VPP y VPN, también nos indican que el modelo con k=1 es el que mejor se ajusta en general. En este caso, el modelo tiene una sensibilidad de 0.77 y una especificidad de 0.81, lo que significa que es capaz de detectar correctamente el 77% de los casos positivos y de identificar correctamente el 81% de los casos negativos.
 
-Por otro lado, los valores predictivos positivo y negativo indican la probabilidad de que un resultado positivo o negativo, respectivamente, sea verdadero. En este caso, el VPP es 0.77 y el VPN es 0.82, lo que significa que cuando el modelo da una predicción positiva, hay una probabilidad del 77% de que sea verdadera, mientras que cuando da una predicción negativa, la probabilidad de que sea verdadera es del 82%. El modelo parece clasificar de forma bastante equilibrada los verdaderos positivos sin elevar mucho el número de falsos positivos, y lo mismo sucede con los casos negativos.
+Por otro lado, los valores predictivos positivo y negativo indican la probabilidad de que un resultado positivo o negativo, respectivamente, sea verdadero. En este caso, el VPP es 0.77 y el VPN es 0.82, lo que significa que cuando el modelo da una predicción positiva, hay una probabilidad del 77% de que sea verdadera, mientras que cuando da una predicción negativa, la probabilidad de que sea verdadera es del 82%. Esto coincide con las reflexiones realizadas en los apartados 3.a y 3.e, y es que como la clase negativa (coil) está ligeramente sobrerepresentada, es más probable que la clasifique correctamente.
 
 Analizando la curva ROC podría parecer que k=1 es el que mejor se ajusta, ya que es el que más se aproxima a 1 de sensibilidad y 0 de 1 - especificidad. Lo podemos ver en la curva ROC, pero también en la propia matriz de confusión. El número de falsos positivos y de falsos negativos es bastante similar, sobretodo para k=1. Conforme aumentamos el valor de k, la curva se aleja cada vez más de estos valores ideales, determinando así que se ajustan peor los modelos.
 
