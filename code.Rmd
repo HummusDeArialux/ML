@@ -100,6 +100,7 @@ data = pd.read_csv('data4.csv', delimiter=";").values
 ```
 
 ```{python}
+
 from tabulate import tabulate
 import numpy as np
 
@@ -112,39 +113,54 @@ def sum_table(data):
   for seq in data:
     # We use column -1 because it is where the structure info is located
     structure = seq[-1]
+    # If the structure is already in counts add 1
     if structure in counts:
       counts[structure] += 1
+    # If the structure is not in counts adds it and makes it 1
     else:
       counts[structure] = 1
 
+  # Calculates the total number of structures
+  total = sum(counts.values())
+
   # Formats the table itself
-  headers = ["Estructura", "Contador"]
-  tabla = [[structure, counts[structure]] for structure in counts]
+  headers = ["Estructura", "Contador", "Porcentaje"]
+  tabla = []
+  # For each structure in the dic
+  for structure in counts:
+    count = counts[structure] # Saves the number of instances as count
+    percentage = count / total * 100 # Calculates the percentage
+    tabla.append([structure, count, percentage])# Adds it to the table
   
-  return print(tabulate(tabla, headers=headers))
+  return print(tabulate(tabla, headers=headers, floatfmt=".2f"))
 
 # Apply the function
 
 sum_table(data)
 
 ```
+
+Parece ser que la clase coil está sobrerepresentada (representa más de la mitad del total de los datos) con respecto a las otras dos clases, esto nos afectará al modelo de predicción. Cuando una de las clases está sobrerepresentada en un conjunto de datos, el modelo puede ser más propenso a predecir esa clase con mayor frecuencia y tener dificultades para reconocer las otras clases menos frecuentes. En este caso, el modelo puede tener una tendencia a predecir que los nuevos casos pertenecen a la clase coil con mayor frecuencia que al resto de clases. Para abordar este problema, se pueden tomar medidas como aumentar la cantidad de casos de las clases menos frecuentes o ajustar las ponderaciones de las clases en el modelo durante el entrenamiento para equilibrar la influencia de cada clase. 
+
+Nota: He añadido el apartado porcentaje aunque no se pidiera para que fuera más fácil ver la representación de cada clase.
+
 ## (b) Aplicación one-hot
 
 ```{python}
 
 import numpy as np
 
-# Save the last column as y because they contain the structures to predict
+# Save the last column as y because it contains the structures to predict
 
 y = data[:, -1]
 
-# Removed the structures columns of the data
+# Removed the structures columns from the data
 list_seq = np.delete(data, -1, 1)
 
 # Create the list to store the encoded data
 seq_encoded = []
 
-# We iterate over the data applying the encoding function and storing it in the list
+# Iterate over the data applying the encoding function and storing it in the list
 for seq in list_seq:
   seq_encoded.append(encode_sequence(seq))
 
@@ -168,6 +184,8 @@ sum_table(y_test)
 sum_table(y_train)
 
 ```
+
+Como podemos observar, la clase coil sigue teniendo una mayor cantidad de muestras. Sin embargo, es importante destacar que las clases están igualmente representadas en los conjuntos de entrenamiento y prueba. Si por casualidad una clase estuviera subrepresentada o incluso ausente en el conjunto de entrenamiento, el modelo podría tener dificultades para generalizar bien y hacer predicciones precisas en nuevos datos. Esto subraya la importancia de asegurarse de que todas las clases estén adecuadamente representadas en el conjunto de entrenamiento con respecto al conjunto de pruebas y a la realidad en sí misma, para lograr un modelo más preciso y confiable.
 
 ## (d) Aplicación k-NN para predecir la estructura
 
@@ -226,19 +244,6 @@ print(tabla2)
 
 ```{python}
 
-# Define a function to summarise the data sets
-def count_instances(array):
-  # Counts unique ocurrences in the array
-  unique, counts = np.unique(array, return_counts=True)
-  # Shows them in a dictionary
-  dic = dict(zip(unique, counts))
-  
-  return print(dic)
-
-```
-
-```{python}
-
 # Preparing y
 y2 = np.copy(y) # Copy y to y2 to preserve the original
 
@@ -248,14 +253,14 @@ y2[y2 == "e"] = "1"
 y2[y2 == "_"] = "0"
 
 # Examine the data set
-count_instances(y2)
+sum_table(y2)
 
 # Split the data set into training and test using the seed 123
 seq_encoded_train2, seq_encoded_test2, y2_train, y2_test = train_test_split(seq_encoded, y2 ,test_size=0.33,  random_state=123)
 
 # Examine the data set
-count_instances(y2_train)
-count_instances(y2_test)
+sum_table(y2_train)
+sum_table(y2_test)
 
 #k-NN and ROC curve
 
